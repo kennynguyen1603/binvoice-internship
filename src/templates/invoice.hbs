@@ -1,0 +1,500 @@
+<html lang='en'>
+
+<head>
+  <meta charset='UTF-8' />
+  <meta name='viewport' content='width=device-width, initial-scale=1.0' />
+  <title>Invoice {{number}}</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+      font-size: 13px;
+      line-height: 1.6;
+      color: #1e293b;
+      background: #ffffff;
+
+        {
+          {
+          #if isCanceled
+        }
+      }
+
+      position: relative;
+
+        {
+          {
+          /if
+        }
+      }
+    }
+
+      {
+        {
+        #if isCanceled
+      }
+    }
+
+    .watermark {
+      position: fixed;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%) rotate(-45deg);
+      font-size: 140px;
+      font-weight: 900;
+      color: rgba(239, 68, 68, 0.12);
+      z-index: 1000;
+      pointer-events: none;
+      user-select: none;
+      letter-spacing: 0.05em;
+    }
+
+      {
+        {
+        /if
+      }
+    }
+
+    .container {
+      max-width: 850px;
+      margin: 0 auto;
+      padding: 48px;
+      background: white;
+    }
+
+    .header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      margin-bottom: 48px;
+      padding-bottom: 32px;
+      border-bottom: 3px solid #0f172a;
+    }
+
+    .company-info h1 {
+      color: #0f172a;
+      font-size: 32px;
+      font-weight: 700;
+      margin-bottom: 12px;
+      letter-spacing: -0.02em;
+    }
+
+    .company-info p {
+      color: #64748b;
+      font-size: 13px;
+      line-height: 1.6;
+    }
+
+    .invoice-meta {
+      text-align: right;
+    }
+
+    .invoice-meta h2 {
+      font-size: 14px;
+      font-weight: 600;
+      color: #64748b;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      margin-bottom: 16px;
+    }
+
+    .invoice-meta p {
+      margin-bottom: 8px;
+      color: #475569;
+      font-size: 13px;
+    }
+
+    .invoice-meta strong {
+      color: #1e293b;
+      font-weight: 600;
+      display: inline-block;
+      min-width: 90px;
+    }
+
+    .status-badge {
+      display: inline-block;
+      padding: 6px 16px;
+      border-radius: 6px;
+      font-weight: 600;
+      text-transform: uppercase;
+      font-size: 11px;
+      letter-spacing: 0.05em;
+      margin-top: 8px;
+    }
+
+    .status-draft {
+      background-color: #f1f5f9;
+      color: #475569;
+    }
+
+    .status-issued {
+      background-color: #dcfce7;
+      color: #166534;
+    }
+
+    .status-canceled {
+      background-color: #fee2e2;
+      color: #991b1b;
+    }
+
+    .parties {
+      display: flex;
+      justify-content: space-between;
+      gap: 48px;
+      margin-bottom: 48px;
+      padding: 32px;
+      background: #f8fafc;
+      border-radius: 8px;
+    }
+
+    .party {
+      flex: 1;
+    }
+
+    .party h3 {
+      color: #0f172a;
+      margin-bottom: 12px;
+      font-size: 12px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+    }
+
+    .party p {
+      margin-bottom: 6px;
+      color: #475569;
+      font-size: 13px;
+      line-height: 1.6;
+    }
+
+    .party p strong {
+      color: #1e293b;
+      font-weight: 600;
+      font-size: 15px;
+    }
+
+    .items-table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-bottom: 40px;
+      font-variant-numeric: tabular-nums;
+    }
+
+    .items-table th,
+    .items-table td {
+      padding: 16px 12px;
+      text-align: left;
+    }
+
+    .items-table thead {
+      background: #0f172a;
+      color: #ffffff;
+    }
+
+    .items-table th {
+      font-weight: 600;
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+    }
+
+    .items-table tbody tr {
+      border-bottom: 1px solid #e2e8f0;
+    }
+
+    .items-table tbody tr:nth-child(even) {
+      background-color: #f8fafc;
+    }
+
+    .items-table tbody tr:hover {
+      background-color: #f1f5f9;
+    }
+
+    .items-table td {
+      color: #475569;
+      font-size: 13px;
+    }
+
+    .items-table .text-right {
+      text-align: right;
+      font-weight: 500;
+      color: #1e293b;
+    }
+
+    .items-table .text-center {
+      text-align: center;
+    }
+
+    .items-table .item-number {
+      color: #94a3b8;
+      font-weight: 600;
+    }
+
+    .items-table .description {
+      color: #1e293b;
+      font-weight: 500;
+    }
+
+    .totals {
+      margin-left: auto;
+      width: 380px;
+      margin-top: 20px;
+    }
+
+    .totals-container {
+      width: 100%;
+      font-variant-numeric: tabular-nums;
+    }
+
+    .total-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 4px 20px;
+      font-size: 14px;
+      border-bottom: 1px solid #e2e8f0;
+    }
+
+    /* Remove border from the last regular row (Tax Total) */
+    .total-row:nth-child(2) {
+      border-bottom: none;
+    }
+
+    .total-row .label {
+      font-weight: 500;
+      color: #64748b;
+    }
+
+    .total-row .amount {
+      font-weight: 600;
+      color: #1e293b;
+      font-size: 15px;
+    }
+
+    .total-row.grand-total {
+      background: #0f172a;
+      color: #ffffff;
+      border: none;
+      padding: 4px 20px;
+    }
+
+    .total-row.grand-total .label,
+    .total-row.grand-total .amount {
+      color: #ffffff;
+      font-weight: 700;
+      font-size: 16px;
+    }
+
+    .footer {
+      margin-top: 56px;
+      padding-top: 24px;
+      border-top: 2px solid #e2e8f0;
+      font-size: 12px;
+      color: #64748b;
+    }
+
+    .notes {
+      margin-bottom: 24px;
+      padding: 20px;
+      background: #f8fafc;
+      border-left: 4px solid #0f172a;
+      border-radius: 4px;
+    }
+
+    .notes h4 {
+      margin-bottom: 10px;
+      color: #0f172a;
+      font-weight: 600;
+      font-size: 13px;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+
+    .notes p {
+      color: #475569;
+      line-height: 1.7;
+    }
+
+      {
+        {
+        #if cancelReason
+      }
+    }
+
+    .cancel-info {
+      background: linear-gradient(135deg, #fee2e2 0%, #fecaca 100%);
+      border: 2px solid #fca5a5;
+      border-radius: 8px;
+      padding: 24px;
+      margin-bottom: 24px;
+    }
+
+    .cancel-info h4 {
+      color: #991b1b;
+      margin-bottom: 12px;
+      font-weight: 700;
+      font-size: 14px;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .cancel-info p {
+      color: #7f1d1d;
+      margin-bottom: 6px;
+      font-weight: 500;
+      font-size: 13px;
+    }
+
+    .cancel-info p:last-child {
+      margin-bottom: 0;
+    }
+
+    .cancel-info strong {
+      font-weight: 700;
+    }
+
+      {
+        {
+        /if
+      }
+    }
+
+    @media print {
+      body {
+        -webkit-print-color-adjust: exact;
+        print-color-adjust: exact;
+      }
+
+      .container {
+        padding: 20px;
+      }
+    }
+  </style>
+</head>
+
+<body>
+  {{#if isCanceled}}
+  <div class='watermark'>CANCELED</div>
+  {{/if}}
+
+  <div class='container'>
+    <div class='header'>
+      <div class='company-info'>
+        <h1>{{sellerName}}</h1>
+        {{#if sellerTaxId}}
+        <p><strong>Tax ID:</strong> {{sellerTaxId}}</p>
+        {{/if}}
+      </div>
+      <div class='invoice-meta'>
+        <h2>Invoice</h2>
+        {{#if number}}
+        <p><strong>Number:</strong> {{number}}</p>
+        {{/if}}
+        {{#if issueDate}}
+        <p><strong>Issue Date:</strong> {{formatDate issueDate}}</p>
+        {{/if}}
+        {{#if dueDate}}
+        <p><strong>Due Date:</strong> {{formatDate dueDate}}</p>
+        {{/if}}
+        <p>
+          <span class='status-badge status-{{status}}'>{{status}}</span>
+        </p>
+      </div>
+    </div>
+
+    <div class='parties'>
+      <div class='party'>
+        <h3>Bill To</h3>
+        <p><strong>{{buyerName}}</strong></p>
+        {{#if buyerTaxId}}
+        <p>Tax ID: {{buyerTaxId}}</p>
+        {{/if}}
+        {{#if buyerAddress}}
+        <p>{{buyerAddress}}</p>
+        {{/if}}
+      </div>
+      <div class='party'>
+        <h3>Bill From</h3>
+        <p><strong>{{sellerName}}</strong></p>
+        {{#if sellerTaxId}}
+        <p>Tax ID: {{sellerTaxId}}</p>
+        {{/if}}
+      </div>
+    </div>
+
+    {{#if cancelReason}}
+    <div class='cancel-info'>
+      <h4>⚠ Cancellation Information</h4>
+      <p><strong>Reason:</strong> {{cancelReason}}</p>
+      <p><strong>Canceled At:</strong> {{formatDate canceledAt}}</p>
+    </div>
+    {{/if}}
+
+    <table class='items-table'>
+      <thead>
+        <tr>
+          <th style="width: 40px;">#</th>
+          <th>Description</th>
+          <th class='text-center' style="width: 80px;">Qty</th>
+          <th class='text-right' style="width: 100px;">Unit Price</th>
+          <th class='text-right' style="width: 70px;">Tax %</th>
+          <th class='text-right' style="width: 100px;">Subtotal</th>
+          <th class='text-right' style="width: 90px;">Tax</th>
+          <th class='text-right' style="width: 110px;">Total</th>
+        </tr>
+      </thead>
+      <tbody>
+        {{#each items}}
+        <tr>
+          <td class='item-number'>{{add1 @index}}</td>
+          <td class='description'>{{description}}</td>
+          <td class='text-center'>{{formatNumber quantity}}</td>
+          <td class='text-right'>${{formatMoney unitPrice}}</td>
+          <td class='text-right'>{{formatNumber taxRate}}%</td>
+          <td class='text-right'>${{formatMoney lineSubtotal}}</td>
+          <td class='text-right'>${{formatMoney lineTax}}</td>
+          <td class='text-right'>${{formatMoney lineTotal}}</td>
+        </tr>
+        {{/each}}
+      </tbody>
+    </table>
+
+    <div class='totals'>
+      <div class='totals-container'>
+        <div class='total-row'>
+          <span class='label'>Subtotal:</span>
+          <span class='amount'>${{formatMoney subtotal}}</span>
+        </div>
+        <div class='total-row'>
+          <span class='label'>Tax Total:</span>
+          <span class='amount'>${{formatMoney taxTotal}}</span>
+        </div>
+        <div class='total-row grand-total'>
+          <span class='label'>Grand Total:</span>
+          <span class='amount'>${{formatMoney grandTotal}}</span>
+        </div>
+      </div>
+    </div>
+
+    {{#if notes}}
+    <div class='notes'>
+      <h4>Notes</h4>
+      <p>{{notes}}</p>
+    </div>
+    {{/if}}
+
+    <div class='footer'>
+      <p><strong>Thank you for your business!</strong></p>
+      <p>Generated on {{formatDate generatedAt}}</p>
+    </div>
+  </div>
+</body>
+
+</html>
