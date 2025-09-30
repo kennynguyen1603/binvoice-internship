@@ -1,17 +1,16 @@
 {
   "compilerOptions": {
-    "module": "NodeNext", 
+    "module": "NodeNext",
     "moduleResolution": "NodeNext",
-    "target": "ES2023", 
-    "outDir": "dist", 
+    "target": "ES2023",
+    "outDir": "dist",
     "esModuleInterop": true,
-    "strict": true, 
-    "skipLibCheck": true, 
-    "baseUrl": ".", 
+    "strict": true,
+    "skipLibCheck": true,
+    "baseUrl": ".",
     "paths": {
-      "#*": ["src/*"] 
+      "#*": ["src/*"]
     }
   },
-  "files": ["src/type.d.ts"], 
-  "include": ["src/**/*"] 
+  "include": ["src/**/*"]
 }
