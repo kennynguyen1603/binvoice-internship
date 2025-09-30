@@ -1,0 +1,90 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum InvoiceStatus {
+  draft
+  issued
+  canceled
+}
+
+model InvoiceNumberSeq {
+  year      Int      @id
+  lastValue Int      @default(0) @map("last_value")
+  updatedAt DateTime @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  @@map("invoice_number_seq")
+}
+
+model Invoice {
+  id     String        @id @default(uuid())
+  number String?       @unique
+  status InvoiceStatus @default(draft)
+
+  currency String @default("VND")
+
+  issueDate DateTime? @map("issue_date") @db.Timestamptz(6)
+  dueDate   DateTime? @map("due_date") @db.Timestamptz(6)
+
+  buyerName    String  @map("buyer_name")
+  buyerTaxId   String? @map("buyer_tax_id")
+  buyerAddress String? @map("buyer_address")
+
+  sellerName  String  @map("seller_name")
+  sellerTaxId String? @map("seller_tax_id")
+
+  subtotal   Decimal @db.Decimal(18, 2) // Tổng tiền trước thuế
+  taxTotal   Decimal @map("tax_total") @db.Decimal(18, 2) // Tổng tiền thuế
+  grandTotal Decimal @map("grand_total") @db.Decimal(18, 2) // Tổng tiền cuối cùng (bao gồm thuế)
+
+  notes String?
+
+  replacementOfId String? @unique @map("replacement_of_id")
+  replacedById    String? @unique @map("replaced_by_id")
+
+  replacementOf Invoice? @relation("InvoiceReplacement", fields: [replacementOfId], references: [id])
+  replacedBy    Invoice? @relation("InvoiceReplacement")
+
+  canceledAt   DateTime? @map("canceled_at") @db.Timestamptz(6)
+  cancelReason String?   @map("cancel_reason")
+
+  pdfPath        String?   @map("pdf_path")
+  pdfGeneratedAt DateTime? @map("pdf_generated_at") @db.Timestamptz(6)
+
+  items InvoiceItem[]
+
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt DateTime @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  @@index([status])
+  @@index([issueDate])
+  @@index([buyerName])
+  @@index([createdAt])
+  @@index([status, createdAt])
+  @@index([status, issueDate])
+  @@index([replacementOfId])
+  @@index([replacedById])
+  @@map("invoices")
+}
+
+model InvoiceItem {
+  id           String  @id @default(uuid())
+  invoiceId    String  @map("invoice_id")
+  description  String
+  quantity     Decimal @db.Decimal(18, 2)
+  unitPrice    Decimal @map("unit_price") @db.Decimal(18, 2)
+  taxRate      Decimal @map("tax_rate") @db.Decimal(5, 2)
+  lineSubtotal Decimal @map("line_subtotal") @db.Decimal(18, 2)
+  lineTax      Decimal @map("line_tax") @db.Decimal(18, 2)
+  lineTotal    Decimal @map("line_total") @db.Decimal(18, 2)
+
+  invoice Invoice @relation(fields: [invoiceId], references: [id], onDelete: Cascade)
+
+  @@index([invoiceId])
+  @@map("invoice_items")
+}
