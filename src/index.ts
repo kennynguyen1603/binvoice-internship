@@ -1,33 +1,29 @@
-import { startRealtimeListener } from '#app/listener.realtime'
-import { runBackfill } from '#app/worker.backfill'
-import { startParserWorkers } from '#app/worker.parser'
-import { startWriterWorker } from '#app/worker.writer'
-import env from '#config/env'
-import { PgAdapter } from '#infra/db/pg.adapter'
-import { startApi } from '#infra/http/api'
-import { logger } from '#utils/logger'
+import { app } from '#app'
+import env from '#config/env/envConfig'
 
-async function main() {
-  const db = new PgAdapter()
-  await db.init()
+const startServer = async () => {
+  try {
+    const port = env.server.port || 8080
+    const host = env.server.host || 'localhost'
 
-  startApi(db)
+    app.listen(port, host, () => {
+      console.log(`🚀 BINVOICE API Server running at http://${host}:${port}`)
+      console.log(`📝 Environment: ${env.nodeEnv}`)
+    })
 
-  startWriterWorker(db)
-  startParserWorkers()
+    process.on('SIGINT', () => {
+      console.log('\n🛑 Shutting down server...')
+      process.exit(0)
+    })
 
-  if (env.indexer.realtimeEnabled) {
-    await startRealtimeListener()
+    process.on('SIGTERM', () => {
+      console.log('\n🛑 Shutting down server...')
+      process.exit(0)
+    })
+  } catch (error) {
+    console.error('❌ Failed to start server:', error)
+    process.exit(1)
   }
-
-  if (env.indexer.backfillEnabled) {
-    await runBackfill(env.solana.programId)
-  }
-
-  logger.info('Indexer up')
 }
 
-main().catch((err) => {
-  logger.error(err)
-  process.exit(1)
-})
+startServer()
