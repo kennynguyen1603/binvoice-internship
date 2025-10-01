@@ -17,7 +17,9 @@ export const InvoiceCreateInputSchema = z.object({
   sellerTaxId: z.string().optional(),
   dueDate: z
     .string()
-    .datetime()
+    .refine((val) => !isNaN(Date.parse(val)), {
+      message: 'Invalid date format'
+    })
     .optional()
     .transform((val) => (val ? new Date(val) : undefined)),
   notes: z.string().optional(),
@@ -33,7 +35,9 @@ export const InvoiceUpdateInputSchema = z.object({
   sellerTaxId: z.string().optional(),
   dueDate: z
     .string()
-    .datetime()
+    .refine((val) => !isNaN(Date.parse(val)), {
+      message: 'Invalid date format'
+    })
     .optional()
     .transform((val) => (val ? new Date(val) : undefined)),
   notes: z.string().optional(),
@@ -60,12 +64,16 @@ export const InvoiceListQuerySchema = z.object({
   buyerName: z.string().optional(),
   issueDateFrom: z
     .string()
-    .datetime()
+    .refine((val) => !isNaN(Date.parse(val)), {
+      message: 'Invalid date format'
+    })
     .optional()
     .transform((val) => (val ? new Date(val) : undefined)),
   issueDateTo: z
     .string()
-    .datetime()
+    .refine((val) => !isNaN(Date.parse(val)), {
+      message: 'Invalid date format'
+    })
     .optional()
     .transform((val) => (val ? new Date(val) : undefined))
 })
