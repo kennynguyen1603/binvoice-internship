@@ -1,0 +1,750 @@
+{
+	"info": {
+		"_postman_id": "ef385b39-73ae-48d5-9e3c-28ea0b27c5ca",
+		"name": "BINVOICE API Collection",
+		"description": "API collection for BINVOICE internship project - Invoice management system with Prisma ORM",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+		"_exporter_id": "34108081"
+	},
+	"item": [
+		{
+			"name": "Invoice Management",
+			"item": [
+				{
+					"name": "Create Invoice Draft",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 201\", function () {",
+									"    pm.response.to.have.status(201);",
+									"});",
+									"",
+									"pm.test(\"Response has success true\", function () {",
+									"    var jsonData = pm.response.json();",
+									"    pm.expect(jsonData.success).to.be.true;",
+									"});",
+									"",
+									"pm.test(\"Invoice has draft status\", function () {",
+									"    var jsonData = pm.response.json();",
+									"    pm.expect(jsonData.data.status).to.eql(\"draft\");",
+									"});",
+									"",
+									"if (pm.response.code === 201) {",
+									"    var jsonData = pm.response.json();",
+									"    pm.environment.set(\"invoiceId\", jsonData.data.id);",
+									"}",
+									""
+								],
+								"type": "text/javascript",
+								"packages": {},
+								"requests": {}
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"buyerName\": \"ABC Technology Ltd. 456\",\n  \"buyerAddress\": \"123 Nguyen Hue Street, District 1, Ho Chi Minh City\",\n  \"buyerTaxId\": \"0123456789\",\n  \"sellerName\": \"XYZ Consulting Co.\",\n  \"sellerAddress\": \"456 Le Loi Boulevard, District 3, Ho Chi Minh City\",\n  \"dueDate\": \"2025-10-30\",\n  \"sellerTaxId\": \"9876543210\",\n  \"currency\": \"VND\",\n  \"notes\": \"Payment due within 30 days\",\n  \"items\": [\n    {\n      \"description\": \"Web Development Service\",\n      \"quantity\": 1,\n      \"unitPrice\": 5000000,\n      \"taxRate\": 0.1\n    },\n    {\n      \"description\": \"Database Setup\",\n      \"quantity\": 2,\n      \"unitPrice\": 2000000,\n      \"taxRate\": 0.1\n    },\n    {\n      \"description\": \"Technical Support (Monthly)\",\n      \"quantity\": 3,\n      \"unitPrice\": 1000000,\n      \"taxRate\": 0.08\n    }\n  ]\n}"
+						},
+						"url": {
+							"raw": "{{apiUrl}}/invoices",
+							"host": [
+								"{{apiUrl}}"
+							],
+							"path": [
+								"invoices"
+							]
+						},
+						"description": "Create a new invoice in draft status"
+					},
+					"response": []
+				},
+				{
+					"name": "Get All Invoices",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test(\"Response has pagination\", function () {",
+									"    var jsonData = pm.response.json();",
+									"    pm.expect(jsonData.data).to.have.property('total');",
+									"    pm.expect(jsonData.data).to.have.property('page');",
+									"    pm.expect(jsonData.data).to.have.property('limit');",
+									"    pm.expect(jsonData.data).to.have.property('totalPages');",
+									"});"
+								],
+								"type": "text/javascript",
+								"packages": {},
+								"requests": {}
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{apiUrl}}/invoices?page=1&limit=10",
+							"host": [
+								"{{apiUrl}}"
+							],
+							"path": [
+								"invoices"
+							],
+							"query": [
+								{
+									"key": "page",
+									"value": "1"
+								},
+								{
+									"key": "limit",
+									"value": "10"
+								}
+							]
+						},
+						"description": "Get list of invoices with pagination"
+					},
+					"response": []
+				},
+				{
+					"name": "Get Invoice By ID",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test(\"Invoice has items\", function () {",
+									"    var jsonData = pm.response.json();",
+									"    pm.expect(jsonData.data.items).to.be.an('array');",
+									"});"
+								],
+								"type": "text/javascript",
+								"packages": {},
+								"requests": {}
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{apiUrl}}/invoices/{{invoiceId}}",
+							"host": [
+								"{{apiUrl}}"
+							],
+							"path": [
+								"invoices",
+								"{{invoiceId}}"
+							]
+						},
+						"description": "Get invoice details by ID"
+					},
+					"response": []
+				},
+				{
+					"name": "Get Invoice By Number",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test(\"Invoice number matches request\", function () {",
+									"    var jsonData = pm.response.json();",
+									"    pm.expect(jsonData.data.number).to.be.a('string');",
+									"    pm.expect(jsonData.data.number).to.include('INV-2024-');",
+									"});",
+									"",
+									"pm.test(\"Invoice has items\", function () {",
+									"    var jsonData = pm.response.json();",
+									"    pm.expect(jsonData.data.items).to.be.an('array');",
+									"});"
+								],
+								"type": "text/javascript",
+								"packages": {},
+								"requests": {}
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{apiUrl}}/invoices/number/:number",
+							"host": [
+								"{{apiUrl}}"
+							],
+							"path": [
+								"invoices",
+								"number",
+								":number"
+							],
+							"variable": [
+								{
+									"key": "number",
+									"value": "INV-2025-000007"
+								}
+							]
+						},
+						"description": "Get invoice details by invoice number (for issued invoices only)"
+					},
+					"response": []
+				},
+				{
+					"name": "Update Invoice Draft",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test(\"Invoice is still draft\", function () {",
+									"    var jsonData = pm.response.json();",
+									"    pm.expect(jsonData.data.status).to.eql(\"draft\");",
+									"});"
+								],
+								"type": "text/javascript",
+								"packages": {},
+								"requests": {}
+							}
+						}
+					],
+					"request": {
+						"method": "PATCH",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"buyerName\": \"ABC Technology Ltd. (Updated)\",\n  \"notes\": \"Payment due within 15 days - Updated terms\",\n  \"items\": [\n    {\n      \"description\": \"Web Development Service (Premium)\",\n      \"quantity\": 1,\n      \"unitPrice\": 6000000,\n      \"taxRate\": 0.1\n    },\n    {\n      \"description\": \"Database Setup & Optimization\",\n      \"quantity\": 1,\n      \"unitPrice\": 3000000,\n      \"taxRate\": 0.1\n    }\n  ]\n}"
+						},
+						"url": {
+							"raw": "{{apiUrl}}/invoices/{{invoiceId}}",
+							"host": [
+								"{{apiUrl}}"
+							],
+							"path": [
+								"invoices",
+								"{{invoiceId}}"
+							]
+						},
+						"description": "Update invoice draft (only allowed for draft status)"
+					},
+					"response": []
+				},
+				{
+					"name": "Issue Invoice",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test(\"Invoice is issued\", function () {",
+									"    var jsonData = pm.response.json();",
+									"    pm.expect(jsonData.data.status).to.eql(\"issued\");",
+									"});",
+									"",
+									"pm.test(\"Invoice has number\", function () {",
+									"    var jsonData = pm.response.json();",
+									"    pm.expect(jsonData.data.number).to.not.be.null;",
+									"});",
+									"",
+									"pm.test(\"Invoice has issue date\", function () {",
+									"    var jsonData = pm.response.json();",
+									"    pm.expect(jsonData.data.issueDate).to.not.be.null;",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [],
+						"url": {
+							"raw": "{{apiUrl}}/invoices/{{invoiceId}}/issue",
+							"host": [
+								"{{apiUrl}}"
+							],
+							"path": [
+								"invoices",
+								"{{invoiceId}}",
+								"issue"
+							]
+						},
+						"description": "Issue a draft invoice (change status to issued and assign invoice number)"
+					},
+					"response": []
+				},
+				{
+					"name": "Cancel Invoice",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test(\"Invoice is canceled\", function () {",
+									"    var jsonData = pm.response.json();",
+									"    pm.expect(jsonData.data.status).to.eql(\"canceled\");",
+									"});",
+									"",
+									"pm.test(\"Invoice has cancel reason\", function () {",
+									"    var jsonData = pm.response.json();",
+									"    pm.expect(jsonData.data.cancelReason).to.not.be.null;",
+									"});"
+								],
+								"type": "text/javascript",
+								"packages": {},
+								"requests": {}
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"reason\": \"Customer requested cancellation due to change in requirements\"\n}   "
+						},
+						"url": {
+							"raw": "{{apiUrl}}/invoices/{{invoiceId}}/cancel",
+							"host": [
+								"{{apiUrl}}"
+							],
+							"path": [
+								"invoices",
+								"{{invoiceId}}",
+								"cancel"
+							]
+						},
+						"description": "Cancel an issued invoice with a reason"
+					},
+					"response": []
+				},
+				{
+					"name": "Delete Invoice Draft",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test(\"Response indicates success\", function () {",
+									"    var jsonData = pm.response.json();",
+									"    pm.expect(jsonData.success).to.be.true;",
+									"});"
+								],
+								"type": "text/javascript",
+								"packages": {},
+								"requests": {}
+							}
+						}
+					],
+					"request": {
+						"method": "DELETE",
+						"header": [],
+						"url": {
+							"raw": "{{apiUrl}}/invoices/{{invoiceId}}",
+							"host": [
+								"{{apiUrl}}"
+							],
+							"path": [
+								"invoices",
+								"{{invoiceId}}"
+							]
+						},
+						"description": "Delete an invoice (only allowed for draft status)"
+					},
+					"response": []
+				},
+				{
+					"name": "Replace Invoice",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test(\"New invoice is created\", function () {",
+									"    var jsonData = pm.response.json();",
+									"    pm.expect(jsonData.data.new).to.not.be.null;",
+									"    pm.expect(jsonData.data.new.status).to.eql(\"issued\");",
+									"});",
+									"",
+									"pm.test(\"Old invoice is linked\", function () {",
+									"    var jsonData = pm.response.json();",
+									"    pm.expect(jsonData.data.old.replacedById).to.not.be.null;",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"buyerName\": \"ABC Technology Ltd. (Corrected)\",\n  \"buyerAddress\": \"123 Nguyen Hue Street, District 1, Ho Chi Minh City\",\n  \"buyerTaxId\": \"0123456789\",\n  \"sellerName\": \"XYZ Consulting Co.\",\n  \"sellerAddress\": \"456 Le Loi Boulevard, District 3, Ho Chi Minh City\",\n  \"sellerTaxId\": \"9876543210\",\n  \"currency\": \"VND\",\n  \"notes\": \"Corrected invoice - Original invoice canceled\",\n  \"items\": [\n    {\n      \"description\": \"Web Development Service (Corrected)\",\n      \"quantity\": 1,\n      \"unitPrice\": 5500000,\n      \"taxRate\": 0.1\n    },\n    {\n      \"description\": \"Database Setup & Migration\",\n      \"quantity\": 1,\n      \"unitPrice\": 2500000,\n      \"taxRate\": 0.1\n    }\n  ]\n}"
+						},
+						"url": {
+							"raw": "{{apiUrl}}/invoices/{{invoiceId}}/replace",
+							"host": [
+								"{{apiUrl}}"
+							],
+							"path": [
+								"invoices",
+								"{{invoiceId}}",
+								"replace"
+							]
+						},
+						"description": "Create a replacement invoice for an issued invoice"
+					},
+					"response": []
+				}
+			],
+			"description": "Invoice management endpoints including CRUD operations and status changes"
+		},
+		{
+			"name": "PDF Management",
+			"item": [
+				{
+					"name": "Generate PDF",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									""
+								],
+								"type": "text/javascript",
+								"packages": {},
+								"requests": {}
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [],
+						"url": {
+							"raw": "{{apiUrl}}/invoices/{{invoiceId}}/pdf",
+							"host": [
+								"{{apiUrl}}"
+							],
+							"path": [
+								"invoices",
+								"{{invoiceId}}",
+								"pdf"
+							]
+						},
+						"description": "Generate PDF for an invoice"
+					},
+					"response": []
+				},
+				{
+					"name": "Download PDF",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									""
+								],
+								"type": "text/javascript",
+								"packages": {},
+								"requests": {}
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{apiUrl}}/invoices/{{invoiceId}}/pdf",
+							"host": [
+								"{{apiUrl}}"
+							],
+							"path": [
+								"invoices",
+								"{{invoiceId}}",
+								"pdf"
+							]
+						},
+						"description": "Download generated PDF for an invoice"
+					},
+					"response": []
+				}
+			],
+			"description": "PDF generation and download functionality"
+		},
+		{
+			"name": "Invoice Filtering & Search",
+			"item": [
+				{
+					"name": "Filter by Status",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{apiUrl}}/invoices?status=issued&page=1&limit=5",
+							"host": [
+								"{{apiUrl}}"
+							],
+							"path": [
+								"invoices"
+							],
+							"query": [
+								{
+									"key": "status",
+									"value": "issued",
+									"description": "draft | issued | canceled"
+								},
+								{
+									"key": "page",
+									"value": "1"
+								},
+								{
+									"key": "limit",
+									"value": "5"
+								}
+							]
+						},
+						"description": "Filter invoices by status (draft, issued, canceled)"
+					},
+					"response": []
+				},
+				{
+					"name": "Search by Buyer Name",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{apiUrl}}/invoices?buyerName=ABC&page=1&limit=10",
+							"host": [
+								"{{apiUrl}}"
+							],
+							"path": [
+								"invoices"
+							],
+							"query": [
+								{
+									"key": "buyerName",
+									"value": "ABC"
+								},
+								{
+									"key": "page",
+									"value": "1"
+								},
+								{
+									"key": "limit",
+									"value": "10"
+								}
+							]
+						},
+						"description": "Search invoices by buyer name"
+					},
+					"response": []
+				},
+				{
+					"name": "Filter by Date Range",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{apiUrl}}/invoices?issueDateFrom=2025-09-20&issueDateTo=2025-10-01&page=1&limit=20",
+							"host": [
+								"{{apiUrl}}"
+							],
+							"path": [
+								"invoices"
+							],
+							"query": [
+								{
+									"key": "issueDateFrom",
+									"value": "2025-09-20"
+								},
+								{
+									"key": "issueDateTo",
+									"value": "2025-10-01"
+								},
+								{
+									"key": "page",
+									"value": "1"
+								},
+								{
+									"key": "limit",
+									"value": "20"
+								}
+							]
+						},
+						"description": "Filter invoices by issue date range"
+					},
+					"response": []
+				},
+				{
+					"name": "General Search",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{apiUrl}}/invoices?q=technology&page=1&limit=10",
+							"host": [
+								"{{apiUrl}}"
+							],
+							"path": [
+								"invoices"
+							],
+							"query": [
+								{
+									"key": "q",
+									"value": "technology"
+								},
+								{
+									"key": "page",
+									"value": "1"
+								},
+								{
+									"key": "limit",
+									"value": "10"
+								}
+							]
+						},
+						"description": "General search across invoice fields"
+					},
+					"response": []
+				}
+			],
+			"description": "Invoice filtering and search functionality"
+		},
+		{
+			"name": "Health Check",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"Status code is 200\", function () {",
+							"    pm.response.to.have.status(200);",
+							"});",
+							"",
+							"pm.test(\"Response has status OK\", function () {",
+							"    var jsonData = pm.response.json();",
+							"    pm.expect(jsonData.status).to.eql(\"OK\");",
+							"});"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "{{apiUrl}}/health",
+					"host": [
+						"{{apiUrl}}"
+					],
+					"path": [
+						"health"
+					]
+				},
+				"description": "Health check endpoint to verify API is running"
+			},
+			"response": []
+		}
+	],
+	"event": [
+		{
+			"listen": "prerequest",
+			"script": {
+				"type": "text/javascript",
+				"exec": [
+					"// Set default headers",
+					"pm.request.headers.add({",
+					"    key: 'Accept',",
+					"    value: 'application/json'",
+					"});"
+				]
+			}
+		},
+		{
+			"listen": "test",
+			"script": {
+				"type": "text/javascript",
+				"exec": [
+					"// Global test for response time",
+					"pm.test(\"Response time is less than 2000ms\", function () {",
+					"    pm.expect(pm.response.responseTime).to.be.below(2000);",
+					"});",
+					"",
+					"// Global test for content type",
+					"pm.test(\"Content-Type is application/json\", function () {",
+					"    pm.expect(pm.response.headers.get(\"Content-Type\")).to.include(\"application/json\");",
+					"});"
+				]
+			}
+		}
+	],
+	"variable": [
+		{
+			"key": "baseUrl",
+			"value": "{{protocol}}://{{host}}:{{port}}",
+			"type": "string"
+		},
+		{
+			"key": "apiUrl",
+			"value": "{{baseUrl}}/api/v1",
+			"type": "string"
+		}
+	]
+}
