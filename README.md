@@ -176,18 +176,18 @@ pnpm build
 
 ### Core Endpoints
 
-| Method   | Endpoint                | Description      | Status Rules       |
-| -------- | ----------------------- | ---------------- | ------------------ |
-| `POST`   | `/invoices`             | Tạo draft        | ✅ Always          |
-| `GET`    | `/invoices`             | List với filters | ✅ Always          |
-| `GET`    | `/invoices/:id`         | Chi tiết invoice | ✅ Always          |
-| `PATCH`  | `/invoices/:id`         | Cập nhật         | ⚠️ Draft only      |
-| `DELETE` | `/invoices/:id`         | Xoá              | ⚠️ Draft only      |
-| `POST`   | `/invoices/:id/issue`   | Phát hành        | ⚠️ Draft only      |
-| `POST`   | `/invoices/:id/cancel`  | Hủy hoá đơn      | ⚠️ Issued only     |
-| `POST`   | `/invoices/:id/replace` | Thay thế         | ⚠️ Issued only     |
-| `POST`   | `/invoices/:id/pdf`     | Generate PDF     | ✅ Always          |
-| `GET`    | `/invoices/:id/pdf`     | Download PDF     | ✅ If exists       |
+| Method   | Endpoint                | Description      | Status Rules   |
+| -------- | ----------------------- | ---------------- | -------------- |
+| `POST`   | `/invoices`             | Tạo draft        | ✅ Always      |
+| `GET`    | `/invoices`             | List với filters | ✅ Always      |
+| `GET`    | `/invoices/:id`         | Chi tiết invoice | ✅ Always      |
+| `PATCH`  | `/invoices/:id`         | Cập nhật         | ⚠️ Draft only  |
+| `DELETE` | `/invoices/:id`         | Xoá              | ⚠️ Draft only  |
+| `POST`   | `/invoices/:id/issue`   | Phát hành        | ⚠️ Draft only  |
+| `POST`   | `/invoices/:id/cancel`  | Hủy hoá đơn      | ⚠️ Issued only |
+| `POST`   | `/invoices/:id/replace` | Thay thế         | ⚠️ Issued only |
+| `POST`   | `/invoices/:id/pdf`     | Generate PDF     | ✅ Always      |
+| `GET`    | `/invoices/:id/pdf`     | Download PDF     | ✅ If exists   |
 
 ### Request/Response Examples
 
@@ -231,8 +231,8 @@ POST /invoices/{id}/issue
 
 ### Postman Collection
 
-📁 **Import collection**: `/postman/BINVOICE_API_Collection.json`
-📁 **File environment**: `/postman/BINVOICE_Environment.json`
+📁 **Import collection**: `/postman/BINVOICE_API.postman_collection.json`
+📁 **File environment**: `/postman/BINVOICE_ENV.postman_environment.json`
 
 **Quy trình kiểm thử**: Create Draft → Issue → Generate PDF → Download → Cancel/Replace → Generate PDF (Xem lại)
 
@@ -253,29 +253,38 @@ pnpm test:watch
 
 ### Phân loại kiểm thử
 
-#### Unit Tests (6 bộ test, 19 test case)
+#### Unit Tests (3 bộ test đã pass, 42 test case)
 
-- ✅ **Tiện ích tiền tệ**: Độ chính xác thập phân, làm tròn, tính toán
-- ✅ **Hệ thống đánh số**: Validation format, tạo sequence
-- ✅ **Logic service**: Chuyển đổi trạng thái, validation quy tắc nghiệp vụ
+- ✅ **Tiện ích tiền tệ** (`money.test.ts`): Độ chính xác thập phân, làm tròn, tính toán
+- ✅ **Simple Health/Route Tests**: Kiểm thử cơ bản endpoint health
+- ✅ **Validation Tests**: Input validation và error handling
 
-#### Integration Tests (2 bộ test, 16 test case)
+#### Integration Tests (3 bộ test có issues, 25 test case fail)
 
-- ✅ **Invoice service**: Kiểm thử workflow hoàn chỉnh
-- ✅ **API endpoints**: Validation end-to-end request/response
+- ⚠️ **Invoice service** (`invoice.service.test.ts`): Database state management issues
+- ⚠️ **Invoice numbering** (`numbering.test.ts`): Sequence generation concurrency problems
+- ⚠️ **API endpoints** (`api.integration.test.ts`): End-to-end workflow failures
 
-#### Kiểm thử đồng thời (Concurrency Testing)
+#### Vấn đề chính được xác định
 
-- ✅ **Ngăn chặn race condition**: Phát hành hoá đơn song song
-- ✅ **Cô lập transaction**: Tính nhất quán dữ liệu dưới tải cao
+- **Database isolation**: Tests không được cleanup đúng cách giữa các runs
+- **Race conditions**: Concurrency testing cho invoice numbering cần fix
+- **State management**: Invoice state transitions có database consistency issues
 
 ### Kết quả kiểm thử hiện tại
 
 ```
-Test Suites: 6 passed, 6 total
-Tests:       35 passed, 35 total
-Coverage:    > 85% (statements, branches, functions)
+Test Suites: 3 passed, 3 failed, 6 total
+Tests:       42 passed, 25 failed, 67 total
+Status:      Cần khắc phục database isolation và state management
 ```
+
+### Kế hoạch khắc phục
+
+1. **Database Setup/Teardown**: Implement proper test isolation
+2. **Mock Strategy**: Sử dụng mocks cho external dependencies
+3. **State Management**: Fix invoice lifecycle state transitions
+4. **Concurrency Testing**: Resolve race conditions trong numbering system
 
 ## 🏗️ Kiến trúc & Mẫu thiết kế
 
@@ -497,7 +506,7 @@ type InvoiceByStatus<T extends InvoiceStatus> = T extends 'draft'
 ## 📁 Cấu trúc dự án
 
 ```
-binvoice-internship/
+binvoice-intership/
 ├── 🎯 Core Application
 │   ├── src/
 │   │   ├── app.ts              # Thiết lập Express + middleware
