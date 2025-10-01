@@ -186,7 +186,7 @@ pnpm build
 | `POST`   | `/invoices/:id/issue`   | Phát hành        | ⚠️ Draft only      |
 | `POST`   | `/invoices/:id/cancel`  | Hủy hoá đơn      | ⚠️ Issued only     |
 | `POST`   | `/invoices/:id/replace` | Thay thế         | ⚠️ Issued only     |
-| `POST`   | `/invoices/:id/pdf`     | Generate PDF     | ✅ Issued/Canceled |
+| `POST`   | `/invoices/:id/pdf`     | Generate PDF     | ✅ Always          |
 | `GET`    | `/invoices/:id/pdf`     | Download PDF     | ✅ If exists       |
 
 ### Request/Response Examples
