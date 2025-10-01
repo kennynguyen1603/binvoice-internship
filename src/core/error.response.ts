@@ -8,10 +8,6 @@ interface ErrorResponseParams<TData = unknown> {
   readonly data?: TData
 }
 
-/**
- * Base class cho tất cả error responses
- * Đảm bảo format error response consistent across API
- */
 class ErrorResponse<TData = unknown> {
   readonly message: string
   readonly status: number
@@ -25,7 +21,6 @@ class ErrorResponse<TData = unknown> {
   }
 
   send(res: Response, headers: Record<string, string> = {}) {
-    // Set custom headers if provided
     Object.entries(headers).forEach(([key, value]) => {
       res.set(key, value)
     })
@@ -46,7 +41,6 @@ const createErrorResponse = <TData = unknown>(statusCode: number, reasonStatusCo
   }
 }
 
-// Định nghĩa các lỗi HTTP cụ thể
 const BAD_REQUEST = createErrorResponse(httpStatusCode.BAD_REQUEST, reasonPhrases.BAD_REQUEST)
 const UNAUTHORIZED = createErrorResponse(httpStatusCode.UNAUTHORIZED, reasonPhrases.UNAUTHORIZED)
 const NOT_FOUND = createErrorResponse(httpStatusCode.NOT_FOUND, reasonPhrases.NOT_FOUND)

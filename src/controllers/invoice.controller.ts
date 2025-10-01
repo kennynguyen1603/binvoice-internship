@@ -144,7 +144,7 @@ export class InvoiceController {
 
     const invoice = await this.invoiceService.issue(id)
 
-    // Clear PDF cache để đảm bảo PDF tiếp theo sẽ có status mới
+    // Clear PDF cache
     // Note: Accessing internal service via pdfService instance
     if (pdfService && typeof pdfService.clearInvoiceCache === 'function') {
       pdfService.clearInvoiceCache(id)
@@ -165,7 +165,6 @@ export class InvoiceController {
 
     const invoice = await this.invoiceService.cancel(id, reason)
 
-    // Clear PDF cache để đảm bảo PDF tiếp theo sẽ có status mới
     if (pdfService && typeof pdfService.clearInvoiceCache === 'function') {
       pdfService.clearInvoiceCache(id)
     }
@@ -185,11 +184,10 @@ export class InvoiceController {
 
     const result = await this.invoiceService.replace(id, input)
 
-    // Clear PDF cache cho cả invoice cũ và mới
     if (pdfService && typeof pdfService.clearInvoiceCache === 'function') {
-      pdfService.clearInvoiceCache(id) // Clear cache cho invoice gốc
+      pdfService.clearInvoiceCache(id)
       if (result.new) {
-        pdfService.clearInvoiceCache(result.new.id) // Clear cache cho invoice mới
+        pdfService.clearInvoiceCache(result.new.id)
       }
     }
 
@@ -205,7 +203,6 @@ export class InvoiceController {
   generatePdf = async (req: Request, res: Response, _next: NextFunction): Promise<void> => {
     const { id } = req.params as UUIDParam
 
-    // Kiểm tra xem invoice có tồn tại không
     const invoice = await this.invoiceService.findById(id)
     if (!invoice) {
       new NOT_FOUND({
@@ -214,7 +211,6 @@ export class InvoiceController {
       return
     }
 
-    // Generate PDF
     const { fileName } = await pdfService.generatePdf(id)
 
     new CREATED({
@@ -233,7 +229,6 @@ export class InvoiceController {
     try {
       const { id } = req.params as UUIDParam
 
-      // Kiểm tra invoice có tồn tại không
       const invoice = await this.invoiceService.findById(id)
       if (!invoice) {
         new NOT_FOUND({
@@ -242,7 +237,6 @@ export class InvoiceController {
         return
       }
 
-      // Kiểm tra xem PDF có tồn tại không
       const pdfInfo = await pdfService.pdfExists(id)
       if (!pdfInfo.exists || !pdfInfo.filePath) {
         new NOT_FOUND({
@@ -251,10 +245,8 @@ export class InvoiceController {
         return
       }
 
-      // Đọc PDF file
       const pdfBuffer = await pdfService.readPdf(pdfInfo.filePath)
 
-      // Validate PDF buffer
       if (!pdfBuffer || pdfBuffer.length === 0) {
         new NOT_FOUND({
           message: 'PDF file is empty or corrupted. Please regenerate PDF.'
@@ -262,22 +254,17 @@ export class InvoiceController {
         return
       }
 
-      // Generate filename
       const fileName = `${invoice.number || `draft-${id}`}.pdf`
 
-      // Set headers cho PDF download
       res.setHeader('Content-Type', 'application/pdf')
       res.setHeader('Content-Disposition', `attachment; filename="${fileName}"`)
       res.setHeader('Content-Length', pdfBuffer.length.toString())
       res.setHeader('Cache-Control', 'no-cache')
 
-      // Stream PDF
       res.send(pdfBuffer)
     } catch (error) {
-      // Log error for debugging
       console.error('Error in downloadPdf:', error)
 
-      // If headers not sent yet, send error response
       if (!res.headersSent) {
         new NOT_FOUND({
           message: 'Failed to download PDF. Please try again.'

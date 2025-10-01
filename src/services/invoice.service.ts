@@ -36,7 +36,7 @@ export interface UpdateInvoiceDraftInput {
 
 export interface InvoiceFilter {
   status?: InvoiceStatusType
-  q?: string // search query
+  q?: string
   buyerName?: string
   issueDate?: {
     from?: Date
@@ -57,10 +57,8 @@ export class InvoiceService {
   async createDraft(input: CreateInvoiceDraftInput): Promise<InvoiceWithItems> {
     const { items: inputItems, ...invoiceData } = input
 
-    // Tính toán totals từ items
     const { items: calculatedItems, totals } = calculateInvoiceFromItems(inputItems)
 
-    // Tạo hoá đơn với status = draft
     return this.repository.createDraft({
       ...invoiceData,
       subtotal: totals.subtotal,
@@ -88,7 +86,6 @@ export class InvoiceService {
 
     const { items: inputItems, ...updateData } = input
 
-    // Nếu có update items thì tính lại totals
     if (inputItems) {
       const { items: calculatedItems, totals } = calculateInvoiceFromItems(inputItems)
 
@@ -98,12 +95,11 @@ export class InvoiceService {
         taxTotal: totals.taxTotal,
         grandTotal: totals.grandTotal,
         items: {
-          deleteMany: {}, // Xoá tất cả items cũ
-          create: calculatedItems // Tạo mới items
+          deleteMany: {},
+          create: calculatedItems
         }
       })
     } else {
-      // Chỉ update thông tin hoá đơn, không đụng tới items
       return this.repository.updateDraft(id, updateData)
     }
   }
@@ -137,12 +133,10 @@ export class InvoiceService {
       throw new BAD_REQUEST({ message: ERROR_MESSAGES.ONLY_ISSUE_DRAFT })
     }
 
-    // Validate bắt buộc
     if (!existing.buyerName || existing.items.length === 0) {
       throw new BAD_REQUEST({ message: ERROR_MESSAGES.MISSING_REQUIRED_DATA })
     }
 
-    // Generate số hoá đơn và set issue date
     const invoiceNumber = await generateInvoiceNumber()
     const issueDate = new Date()
 
@@ -196,15 +190,12 @@ export class InvoiceService {
       throw new BAD_REQUEST({ message: ERROR_MESSAGES.ALREADY_REPLACED })
     }
 
-    // Tính toán cho hoá đơn mới
     const { items: inputItems, ...invoiceData } = newInvoiceData
     const { items: calculatedItems, totals } = calculateInvoiceFromItems(inputItems)
 
-    // Generate số hoá đơn cho hoá đơn thay thế
     const invoiceNumber = await generateInvoiceNumber()
     const issueDate = new Date()
 
-    // Tạo hoá đơn thay thế (status = issued ngay)
     return this.repository.createReplacement(oldInvoiceId, {
       ...invoiceData,
       number: invoiceNumber,
@@ -228,12 +219,10 @@ export class InvoiceService {
   ): Promise<PaginationResult<InvoiceWithItems>> {
     const whereCondition: InvoiceFilterCondition = {}
 
-    // Filter theo status (có index)
     if (filter.status) {
       whereCondition.status = filter.status
     }
 
-    // Filter theo buyer name (có index)
     if (filter.buyerName) {
       whereCondition.buyerName = {
         contains: filter.buyerName,
@@ -241,7 +230,6 @@ export class InvoiceService {
       }
     }
 
-    // Filter theo issue date range (có index)
     if (filter.issueDate) {
       whereCondition.issueDate = {}
       if (filter.issueDate.from) {
@@ -252,19 +240,15 @@ export class InvoiceService {
       }
     }
 
-    // Search query - tối ưu hóa để sử dụng indexes
     if (filter.q && filter.q.trim()) {
       const searchTerm = filter.q.trim()
 
-      // Ưu tiên search theo buyerName trước (có index)
       if (searchTerm.length >= 3) {
         whereCondition.OR = [
           { buyerName: { contains: searchTerm, mode: 'insensitive' } },
           { number: { contains: searchTerm, mode: 'insensitive' } }
-          // Bỏ notes search để tăng performance
         ]
       } else {
-        // Search ngắn chỉ tìm theo number (exact match nhanh hơn)
         whereCondition.number = { contains: searchTerm, mode: 'insensitive' }
       }
     }

@@ -88,10 +88,7 @@ export class InvoiceRepository {
         include: invoiceInclude,
         skip,
         take: limit,
-        orderBy: [
-          { status: 'asc' }, // Issued invoices first
-          { createdAt: 'desc' }
-        ]
+        orderBy: [{ status: 'asc' }, { createdAt: 'desc' }]
       }),
       prisma.invoice.count({ where: filter })
     ])

@@ -8,10 +8,6 @@ interface SuccessResponseParams<TData = unknown> {
   readonly data?: TData
 }
 
-/**
- * Base class cho tất cả success responses
- * Đảm bảo format response consistent across API
- */
 class SuccessResponse<TData = unknown> {
   readonly message: string
   readonly status: number
@@ -47,9 +43,6 @@ interface OKParams<TData = unknown> {
   readonly data?: TData
 }
 
-/**
- * 200 OK Response - Thành công
- */
 class OK<TData = unknown> extends SuccessResponse<TData> {
   constructor({ message, data }: OKParams<TData>) {
     super({ message, data })
@@ -61,9 +54,6 @@ interface CreatedParams<TData = unknown> {
   readonly data?: TData
 }
 
-/**
- * 201 Created Response - Tạo mới thành công
- */
 class CREATED<TData = unknown> extends SuccessResponse<TData> {
   constructor({ message, data }: CreatedParams<TData>) {
     super({

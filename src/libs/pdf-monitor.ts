@@ -1,8 +1,3 @@
-/**
- * PDF Generation Performance Monitor
- * Monitors và logs performance metrics cho PDF generation
- */
-
 export interface PdfPerformanceMetrics {
   invoiceId: string
   startTime: number
@@ -36,7 +31,6 @@ class PdfPerformanceMonitor {
       startTime: Date.now()
     })
 
-    // Clean up old metrics if needed
     if (this.metrics.size > this.maxMetricsHistory) {
       const oldestKey = this.metrics.keys().next().value
       if (oldestKey) {
@@ -66,7 +60,6 @@ class PdfPerformanceMonitor {
       metric.error = error
     }
 
-    // Log performance data
     this.logPerformance(metric)
 
     return metric

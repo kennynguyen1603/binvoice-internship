@@ -77,7 +77,6 @@ class BrowserManager {
       ]
     })
 
-    // Handle browser disconnect
     browser.on('disconnected', () => {
       this.browser = null
     })
@@ -89,7 +88,6 @@ class BrowserManager {
     const browser = await this.getBrowser()
     const page = await browser.newPage()
 
-    // Optimize page for PDF generation
     await page.setViewport({ width: 1280, height: 720 })
     await page.setUserAgent('Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36')
 
@@ -110,11 +108,10 @@ let helpersRegistered = false
 // Optimized Invoice Service with caching
 class InvoiceService {
   private cache = new Map<string, { data: InvoiceWithItems; timestamp: number }>()
-  private cacheTimeout = 5 * 60 * 1000 // 5 minutes
+  private cacheTimeout = 5 * 60 * 1000
 
   async findById(id: string): Promise<InvoiceWithItems | null> {
     try {
-      // Check cache first
       const cached = this.cache.get(id)
       if (cached && Date.now() - cached.timestamp < this.cacheTimeout) {
         return cached.data
@@ -131,7 +128,6 @@ class InvoiceService {
         }
       })
 
-      // Cache the result
       if (invoice) {
         this.cache.set(id, { data: invoice, timestamp: Date.now() })
       }
@@ -189,13 +185,11 @@ export class PdfService {
    */
   async renderInvoiceHtml(invoice: InvoiceWithItems): Promise<string> {
     try {
-      // Load và compile template một lần duy nhất
       if (!this.compiledTemplate) {
         const templateContent = await fs.readFile(this.templatePath, 'utf-8')
         this.compiledTemplate = handlebars.compile(templateContent)
       }
 
-      // Prepare data cho template
       const templateData = {
         ...invoice,
         isCanceled: invoice.status === 'canceled',
@@ -215,15 +209,12 @@ export class PdfService {
     invoiceId: string,
     options: PdfGenerationOptions = {}
   ): Promise<{ filePath: string; fileName: string }> {
-    // Start performance tracking
     const trackingId = pdfPerformanceMonitor.startTracking(invoiceId)
     let page: Page | null = null
 
     try {
-      // IMPORTANT: Clear cache để đảm bảo lấy dữ liệu invoice mới nhất
       this.invoiceService.clearCache(invoiceId)
 
-      // Step 1: Parallel execution - Lấy invoice data và prepare storage
       const step1Start = Date.now()
       const [invoice] = await Promise.all([this.invoiceService.findById(invoiceId), this.ensureStorageDirectory()])
       pdfPerformanceMonitor.recordStep(trackingId, 'templateRenderTime', Date.now() - step1Start)
@@ -232,23 +223,18 @@ export class PdfService {
         throw new Error('Invoice not found')
       }
 
-      // Tạo filename dựa trên invoice number hoặc ID
       const fileName = `${invoice.number || `draft-${invoiceId}`}.pdf`
       const filePath = path.join(this.storageDir, fileName)
 
-      // Step 2: Parallel execution - Render HTML và tạo page
       const step2Start = Date.now()
       const [html, newPage] = await Promise.all([this.renderInvoiceHtml(invoice), this.browserManager.createPage()])
       pdfPerformanceMonitor.recordStep(trackingId, 'browserSetupTime', Date.now() - step2Start)
 
       page = newPage
 
-      // Step 3: Optimize page settings và set content
       const step3Start = Date.now()
 
-      // Optimize page settings for PDF generation
       await page.evaluateOnNewDocument(() => {
-        // Disable animations and transitions for faster rendering
         const style = document.createElement('style')
         style.textContent = `
           *, *::before, *::after {
@@ -261,15 +247,13 @@ export class PdfService {
         document.head.appendChild(style)
       })
 
-      // Set content với optimization
       await page.setContent(html, {
-        waitUntil: 'domcontentloaded', // Thay vì networkidle0 để nhanh hơn
-        timeout: 15000 // Giảm timeout
+        waitUntil: 'domcontentloaded',
+        timeout: 15000
       })
 
       pdfPerformanceMonitor.recordStep(trackingId, 'htmlToContentTime', Date.now() - step3Start)
 
-      // Step 4: Generate PDF
       const step4Start = Date.now()
       await page.pdf({
         path: filePath,
@@ -284,11 +268,10 @@ export class PdfService {
         printBackground: true,
         preferCSSPageSize: true,
         omitBackground: false,
-        tagged: false // Disable accessibility features for speed
+        tagged: false
       })
       pdfPerformanceMonitor.recordStep(trackingId, 'pdfGenerationTime', Date.now() - step4Start)
 
-      // End successful tracking
       pdfPerformanceMonitor.endTracking(trackingId)
 
       return { filePath, fileName }
@@ -297,7 +280,6 @@ export class PdfService {
       pdfPerformanceMonitor.endTracking(trackingId, errorMessage)
       throw new Error(`Failed to generate PDF: ${errorMessage}`)
     } finally {
-      // Close page but keep browser alive for reuse
       if (page) {
         await page.close()
       }
@@ -309,7 +291,6 @@ export class PdfService {
    */
   async pdfExists(invoiceId: string): Promise<{ exists: boolean; filePath?: string; fileName?: string }> {
     try {
-      // Clear cache để đảm bảo lấy dữ liệu mới nhất
       this.invoiceService.clearCache(invoiceId)
       const invoice = await this.invoiceService.findById(invoiceId)
       if (!invoice) {
@@ -373,12 +354,10 @@ export class PdfService {
    * Register Handlebars helpers (chỉ register một lần)
    */
   private registerHandlebarsHelpers(): void {
-    // Kiểm tra xem helpers đã được register chưa
     if (helpersRegistered) {
       return
     }
 
-    // Helper format currency with thousand separators
     handlebars.registerHelper('formatMoney', (value: unknown): string => {
       const num = this.parseNumber(value)
       return num.toLocaleString('en-US', {
@@ -387,7 +366,6 @@ export class PdfService {
       })
     })
 
-    // Helper format number with thousand separators
     handlebars.registerHelper('formatNumber', (value: unknown): string => {
       const num = this.parseNumber(value)
 
@@ -400,7 +378,6 @@ export class PdfService {
       })
     })
 
-    // Helper format date with caching
     const dateFormatCache = new Map<string, string>()
     handlebars.registerHelper('formatDate', (date: unknown): string => {
       if (!date) return ''
@@ -433,7 +410,6 @@ export class PdfService {
       return formatted
     })
 
-    // Helper for 1-based index
     handlebars.registerHelper('add1', (value: number): number => {
       return value + 1
     })
@@ -470,19 +446,14 @@ export class PdfService {
    */
   async warmUp(): Promise<void> {
     try {
-      // Preload browser instance
       await this.browserManager.getBrowser()
 
-      // Precompile template
       if (!this.compiledTemplate) {
         const templateContent = await fs.readFile(this.templatePath, 'utf-8')
         this.compiledTemplate = handlebars.compile(templateContent)
       }
 
-      // Ensure storage directory exists
       await this.ensureStorageDirectory()
-
-      console.log('PDF Service warmed up successfully')
     } catch (error) {
       console.error('Failed to warm up PDF Service:', error)
     }
